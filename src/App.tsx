@@ -74,6 +74,22 @@ type CmsContent = {
   processSteps: string[]
 }
 
+type AnalyticsSummary = {
+  today: {
+    date: string
+    views: number
+    visitors: number
+  }
+  onlineNow: number
+  last7Days: {
+    views: number
+    visitors: number
+    daily: Array<{ date: string; views: number; visitors: number }>
+  }
+  topPagesToday: Array<{ path: string; views: number }>
+  serverTime: string
+}
+
 const siteUrl = 'https://langkahasa.com'
 
 function normalizeWhatsappNumber(rawNumber: string) {
@@ -580,6 +596,24 @@ function SiteLayout() {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [location.pathname])
 
+  useEffect(() => {
+    if (location.pathname.startsWith('/admin')) {
+      return
+    }
+
+    const controller = new AbortController()
+
+    void fetch('/cms/api.php?action=track', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: location.pathname }),
+      signal: controller.signal,
+      keepalive: true,
+    }).catch(() => undefined)
+
+    return () => controller.abort()
+  }, [location.pathname])
+
   return (
     <div className="site-shell">
       <header className="site-header">
@@ -1058,6 +1092,7 @@ function ContactPage() {
 }
 
 const adminTabs = [
+  { id: 'dashboard', label: 'Dashboard' },
   { id: 'settings', label: 'Kontak & SEO' },
   { id: 'slides', label: 'Hero Slider' },
   { id: 'products', label: 'Produk' },
@@ -1108,11 +1143,12 @@ function makeEmptySlide(): HeroSlide {
 
 function AdminPage() {
   const { content, reloadContent } = useCms()
-  const [activeTab, setActiveTab] = useState<AdminTab>('settings')
+  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard')
   const [authenticated, setAuthenticated] = useState(false)
   const [checking, setChecking] = useState(true)
   const [password, setPassword] = useState('')
   const [draft, setDraft] = useState<CmsContent>(content)
+  const [analytics, setAnalytics] = useState<AnalyticsSummary | null>(null)
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
 
@@ -1127,6 +1163,17 @@ function AdminPage() {
     }
 
     setDraft(normalizeContent(payload.content))
+  }, [])
+
+  const loadAnalytics = useCallback(async () => {
+    const response = await fetch(`/cms/api.php?action=analytics&v=${Date.now()}`, { cache: 'no-store' })
+    const payload = await response.json()
+
+    if (!response.ok || !payload.ok) {
+      throw new Error(payload.error ?? 'Gagal mengambil analytics.')
+    }
+
+    setAnalytics(payload.analytics as AnalyticsSummary)
   }, [])
 
   useEffect(() => {
@@ -1145,6 +1192,7 @@ function AdminPage() {
 
         if (payload.authenticated) {
           await loadDraft()
+          await loadAnalytics()
         }
       } catch {
         if (active) {
@@ -1162,7 +1210,22 @@ function AdminPage() {
     return () => {
       active = false
     }
-  }, [loadDraft])
+  }, [loadAnalytics, loadDraft])
+
+  useEffect(() => {
+    if (!authenticated) {
+      return
+    }
+
+    // Analytics is an external realtime source; sync it while admin dashboard is open.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadAnalytics().catch(() => undefined)
+    const intervalId = window.setInterval(() => {
+      void loadAnalytics().catch(() => undefined)
+    }, 10000)
+
+    return () => window.clearInterval(intervalId)
+  }, [authenticated, loadAnalytics])
 
   async function login(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -1184,6 +1247,7 @@ function AdminPage() {
       setAuthenticated(true)
       setPassword('')
       await loadDraft()
+      await loadAnalytics()
       setMessage('Login berhasil.')
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'Login gagal.')
@@ -1308,9 +1372,12 @@ function AdminPage() {
         <div>
           <p className="eyebrow">CMS Langkah Asa</p>
           <h1>Admin Panel</h1>
-          <p>Ubah produk, gambar, hero slider, kontak, dan konten list. Perubahan aktif setelah klik Simpan CMS.</p>
+          <p>Ubah produk, gambar, hero slider, kontak, konten list, dan pantau visit hari ini secara realtime.</p>
         </div>
         <div className="admin-actions">
+          <button className="admin-secondary" type="button" onClick={() => void loadAnalytics()} disabled={busy}>
+            Refresh visit
+          </button>
           <button className="admin-secondary" type="button" onClick={() => void loadDraft()} disabled={busy}>
             Muat ulang
           </button>
@@ -1332,6 +1399,66 @@ function AdminPage() {
           </button>
         ))}
       </div>
+
+      {activeTab === 'dashboard' ? (
+        <div className="admin-stack">
+          <div className="analytics-grid">
+            <div className="analytics-card highlight">
+              <span>Visit Today</span>
+              <strong>{analytics?.today.views ?? 0}</strong>
+              <p>{analytics?.today.visitors ?? 0} visitor unik hari ini</p>
+            </div>
+            <div className="analytics-card">
+              <span>Online sekarang</span>
+              <strong>{analytics?.onlineNow ?? 0}</strong>
+              <p>Aktif dalam 5 menit terakhir</p>
+            </div>
+            <div className="analytics-card">
+              <span>7 hari terakhir</span>
+              <strong>{analytics?.last7Days.views ?? 0}</strong>
+              <p>{analytics?.last7Days.visitors ?? 0} visitor unik</p>
+            </div>
+            <div className="analytics-card">
+              <span>Konten aktif</span>
+              <strong>{draft.products.length}</strong>
+              <p>{draft.heroSlides.length} hero slide</p>
+            </div>
+          </div>
+
+          <div className="admin-grid two">
+            <div className="admin-card">
+              <h2>Top page hari ini</h2>
+              {analytics?.topPagesToday.length ? (
+                <div className="analytics-list">
+                  {analytics.topPagesToday.map((page) => (
+                    <div key={page.path}>
+                      <span>{page.path}</span>
+                      <strong>{page.views}</strong>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="admin-empty">Belum ada data visit hari ini.</p>
+              )}
+            </div>
+            <div className="admin-card">
+              <h2>Visit 7 hari</h2>
+              {analytics?.last7Days.daily.length ? (
+                <div className="analytics-list">
+                  {analytics.last7Days.daily.map((day) => (
+                    <div key={day.date}>
+                      <span>{day.date}</span>
+                      <strong>{day.views}</strong>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="admin-empty">Belum ada data 7 hari.</p>
+              )}
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {activeTab === 'settings' ? (
         <div className="admin-grid two">

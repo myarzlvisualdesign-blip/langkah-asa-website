@@ -15,6 +15,7 @@ $adminPasswordHash = '$2y$12$Aq2rY52YCHxzpxW5tWjHUOTd8sB6vNZkQpZ8psL11toLGcO/E93
 $contentFile = __DIR__ . '/content.json';
 $backupDir = __DIR__ . '/backups';
 $uploadDir = __DIR__ . '/uploads';
+$analyticsFile = __DIR__ . '/analytics.json';
 
 function json_response(array $payload, int $status = 200): never
 {
@@ -65,10 +66,148 @@ function safe_filename(string $name): string
     return $name !== '' ? $name : 'upload';
 }
 
+function client_ip_hash(): string
+{
+    $ip = $_SERVER['HTTP_CF_CONNECTING_IP']
+        ?? $_SERVER['HTTP_X_FORWARDED_FOR']
+        ?? $_SERVER['REMOTE_ADDR']
+        ?? 'unknown';
+    $ip = explode(',', (string)$ip)[0];
+
+    return hash('sha256', trim($ip));
+}
+
+function read_analytics(string $analyticsFile): array
+{
+    if (!file_exists($analyticsFile)) {
+        return ['days' => [], 'recent' => []];
+    }
+
+    $raw = file_get_contents($analyticsFile);
+    $data = json_decode($raw ?: '{}', true);
+
+    if (!is_array($data)) {
+        return ['days' => [], 'recent' => []];
+    }
+
+    return [
+        'days' => is_array($data['days'] ?? null) ? $data['days'] : [],
+        'recent' => is_array($data['recent'] ?? null) ? $data['recent'] : [],
+    ];
+}
+
+function write_analytics(string $analyticsFile, array $data): bool
+{
+    $encoded = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+
+    return $encoded !== false && file_put_contents($analyticsFile, $encoded . PHP_EOL, LOCK_EX) !== false;
+}
+
+function sanitize_path(string $path): string
+{
+    $path = parse_url($path, PHP_URL_PATH) ?: '/';
+    $path = '/' . ltrim((string)$path, '/');
+
+    if (strlen($path) > 140) {
+        $path = substr($path, 0, 140);
+    }
+
+    return preg_replace('/[^a-zA-Z0-9_\\-\\/\\.]/', '', $path) ?: '/';
+}
+
 $action = $_GET['action'] ?? '';
 
 if ($action === 'status') {
     json_response(['ok' => true, 'authenticated' => !empty($_SESSION['authenticated'])]);
+}
+
+if ($action === 'track') {
+    $data = read_json_body();
+    $path = sanitize_path((string)($data['path'] ?? '/'));
+    $today = date('Y-m-d');
+    $now = time();
+    $visitorKey = client_ip_hash();
+    $analytics = read_analytics($analyticsFile);
+
+    if (!isset($analytics['days'][$today]) || !is_array($analytics['days'][$today])) {
+        $analytics['days'][$today] = ['views' => 0, 'visitors' => [], 'pages' => []];
+    }
+
+    $analytics['days'][$today]['views'] = (int)($analytics['days'][$today]['views'] ?? 0) + 1;
+    $analytics['days'][$today]['visitors'][$visitorKey] = $now;
+    $analytics['days'][$today]['pages'][$path] = (int)($analytics['days'][$today]['pages'][$path] ?? 0) + 1;
+    $analytics['recent'][$visitorKey] = ['lastSeen' => $now, 'path' => $path];
+
+    $cutoffDay = date('Y-m-d', strtotime('-30 days'));
+    foreach ($analytics['days'] as $day => $_value) {
+        if ($day < $cutoffDay) {
+            unset($analytics['days'][$day]);
+        }
+    }
+
+    foreach ($analytics['recent'] as $key => $value) {
+        if ((int)($value['lastSeen'] ?? 0) < $now - 900) {
+            unset($analytics['recent'][$key]);
+        }
+    }
+
+    write_analytics($analyticsFile, $analytics);
+    json_response(['ok' => true]);
+}
+
+if ($action === 'analytics') {
+    require_auth();
+    $analytics = read_analytics($analyticsFile);
+    $today = date('Y-m-d');
+    $now = time();
+    $todayData = is_array($analytics['days'][$today] ?? null) ? $analytics['days'][$today] : ['views' => 0, 'visitors' => [], 'pages' => []];
+    $online = 0;
+
+    foreach ($analytics['recent'] as $value) {
+        if ((int)($value['lastSeen'] ?? 0) >= $now - 300) {
+            $online++;
+        }
+    }
+
+    $last7Views = 0;
+    $last7Visitors = [];
+    $daily = [];
+
+    for ($offset = 6; $offset >= 0; $offset--) {
+        $day = date('Y-m-d', strtotime("-{$offset} days"));
+        $dayData = is_array($analytics['days'][$day] ?? null) ? $analytics['days'][$day] : ['views' => 0, 'visitors' => []];
+        $views = (int)($dayData['views'] ?? 0);
+        $visitors = is_array($dayData['visitors'] ?? null) ? $dayData['visitors'] : [];
+        $last7Views += $views;
+        $last7Visitors += $visitors;
+        $daily[] = ['date' => $day, 'views' => $views, 'visitors' => count($visitors)];
+    }
+
+    $pages = is_array($todayData['pages'] ?? null) ? $todayData['pages'] : [];
+    arsort($pages);
+    $topPages = [];
+    foreach (array_slice($pages, 0, 8, true) as $path => $views) {
+        $topPages[] = ['path' => $path, 'views' => (int)$views];
+    }
+
+    json_response([
+        'ok' => true,
+        'analytics' => [
+            'today' => [
+                'date' => $today,
+                'views' => (int)($todayData['views'] ?? 0),
+                'visitors' => count(is_array($todayData['visitors'] ?? null) ? $todayData['visitors'] : []),
+            ],
+            'onlineNow' => $online,
+            'last7Days' => [
+                'views' => $last7Views,
+                'visitors' => count($last7Visitors),
+                'daily' => $daily,
+            ],
+            'topPagesToday' => $topPages,
+            'serverTime' => date('c', $now),
+        ],
+    ]);
 }
 
 if ($action === 'login') {
