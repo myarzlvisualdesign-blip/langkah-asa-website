@@ -43,7 +43,7 @@ type HeroSlide = {
   image: string
 }
 
-const siteUrl = 'https://langkah-asa-website.pages.dev'
+const siteUrl = 'https://langkahasa.com'
 
 function createWhatsappUrl(message: string) {
   return `https://wa.me/62816268265?text=${encodeURIComponent(message)}`
