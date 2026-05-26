@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Cervical collar support visual</title>
+  <desc id="desc">Branded visual for cervical collar product.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#f7fbfb"/>
+      <stop offset="1" stop-color="#dbeeea"/>
+    </linearGradient>
+    <linearGradient id="teal" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#83e8d5"/>
+      <stop offset="1" stop-color="#168c7d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <circle cx="940" cy="158" r="104" fill="#83e8d5" opacity=".25"/>
+  <circle cx="972" cy="728" r="156" fill="#061e34" opacity=".08"/>
+  <g transform="translate(270 118)">
+    <path d="M330 80c105 0 190 85 190 190 0 54-22 103-58 138l-21 20c-26 24-40 58-40 94v58H259v-58c0-35-15-70-41-94l-21-20a188 188 0 0 1-57-138c0-105 85-190 190-190z" fill="#ffffff" stroke="#0a3852" stroke-width="30"/>
+    <path d="M202 428c92 48 178 48 257 0 42 55 64 117 66 187 1 33-22 62-55 69-89 18-182 18-279 0-33-6-56-36-55-69 2-70 24-132 66-187z" fill="#ffffff" stroke="#168c7d" stroke-width="30"/>
+    <path d="M171 543h318M174 621h312" fill="none" stroke="#83e8d5" stroke-width="28" stroke-linecap="round"/>
+    <path d="M277 258c35 24 72 24 109 0" fill="none" stroke="#0a3852" stroke-width="22" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(86 86)">
+    <rect width="270" height="62" rx="31" fill="#061e34"/>
+    <text x="135" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#ffffff">CERVICAL SUPPORT</text>
+  </g>
+</svg>

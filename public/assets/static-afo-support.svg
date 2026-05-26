@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Static ankle foot orthosis visual</title>
+  <desc id="desc">Branded visual for static AFO support product.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#eff8f6"/>
+      <stop offset="1" stop-color="#d9efeb"/>
+    </linearGradient>
+    <linearGradient id="line" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#0a3852"/>
+      <stop offset="1" stop-color="#168c7d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <path d="M105 195c180-106 349-124 506-54 173 77 324 66 454-33" fill="none" stroke="#ffffff" stroke-width="48" opacity=".7"/>
+  <path d="M165 690c166-94 340-110 522-47 144 50 267 45 368-17" fill="none" stroke="#ffffff" stroke-width="36" opacity=".6"/>
+  <g transform="translate(330 105)">
+    <path d="M232 74c-38 102-55 219-51 350l8 205c3 67 43 108 112 122 70 14 138-3 203-51 19-14 28-35 23-58-5-22-22-36-50-42l-175-39-2-144c54-11 92-30 116-57 29-33 35-87 18-162l-25-109c-45 32-104 45-177-15z" fill="#ffffff" stroke="url(#line)" stroke-width="32" stroke-linejoin="round"/>
+    <path d="M181 295h249M195 458h180M268 92c37 24 82 25 135 2" fill="none" stroke="#83e8d5" stroke-width="28" stroke-linecap="round"/>
+    <circle cx="421" cy="643" r="28" fill="#83e8d5"/>
+    <circle cx="341" cy="626" r="22" fill="#168c7d"/>
+  </g>
+  <g transform="translate(86 86)">
+    <rect width="218" height="62" rx="31" fill="#061e34"/>
+    <text x="109" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#ffffff">STATIC AFO</text>
+  </g>
+</svg>

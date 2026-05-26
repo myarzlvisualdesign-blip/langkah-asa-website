@@ -36,12 +36,109 @@ type Product = {
   madeFor: string[]
 }
 
+type HeroSlide = {
+  title: string
+  kicker: string
+  text: string
+  image: string
+}
+
+const siteUrl = 'https://langkah-asa-website.pages.dev'
+
+function createWhatsappUrl(message: string) {
+  return `https://wa.me/62816268265?text=${encodeURIComponent(message)}`
+}
+
+function productWhatsappUrl(product: Product) {
+  return createWhatsappUrl(
+    `Halo Langkah Asa, saya ingin konsultasi produk ${product.name}. Mohon bantu cek kecocokan alat, estimasi harga, dan proses pengukurannya.`,
+  )
+}
+
+function setMeta(attribute: 'name' | 'property', key: string, content: string) {
+  let element = document.head.querySelector<HTMLMetaElement>(`meta[${attribute}="${key}"]`)
+
+  if (!element) {
+    element = document.createElement('meta')
+    element.setAttribute(attribute, key)
+    document.head.appendChild(element)
+  }
+
+  element.content = content
+}
+
+function usePageSeo(title: string, description: string, image = '/assets/hero-afo.jpg') {
+  const location = useLocation()
+
+  useEffect(() => {
+    const canonicalUrl = `${siteUrl}${location.pathname}`
+    const imageUrl = image.startsWith('http') ? image : `${siteUrl}${image}`
+    let canonical = document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')
+
+    if (!canonical) {
+      canonical = document.createElement('link')
+      canonical.rel = 'canonical'
+      document.head.appendChild(canonical)
+    }
+
+    document.title = title
+    canonical.href = canonicalUrl
+    setMeta('name', 'description', description)
+    setMeta('property', 'og:title', title)
+    setMeta('property', 'og:description', description)
+    setMeta('property', 'og:url', canonicalUrl)
+    setMeta('property', 'og:image', imageUrl)
+    setMeta('name', 'twitter:title', title)
+    setMeta('name', 'twitter:description', description)
+    setMeta('name', 'twitter:image', imageUrl)
+  }, [description, image, location.pathname, title])
+}
+
 const contact = {
   phoneDisplay: '0816-268-265',
-  whatsapp: 'https://wa.me/62816268265?text=Halo%20Langkah%20Asa%2C%20saya%20ingin%20konsultasi%20alat%20ortotik%20atau%20prostetik.',
+  whatsapp: createWhatsappUrl('Halo Langkah Asa, saya ingin konsultasi alat ortotik atau prostetik.'),
   instagram: 'https://www.instagram.com/prosthetic.care/',
   instagramLabel: '@prosthetic.care',
 }
+
+const whatsappShortcuts = [
+  {
+    title: 'Konsultasi alat',
+    text: 'Cocok untuk tanya rekomendasi orthosis atau prosthesis sesuai kondisi.',
+    href: createWhatsappUrl('Halo Langkah Asa, saya ingin konsultasi alat yang cocok untuk kondisi saya.'),
+  },
+  {
+    title: 'Cek estimasi harga',
+    text: 'Kirim kebutuhan produk, ukuran, foto kondisi, dan target aktivitas.',
+    href: createWhatsappUrl('Halo Langkah Asa, saya ingin cek estimasi harga alat ortotik/prostetik.'),
+  },
+  {
+    title: 'Jadwal pengukuran',
+    text: 'Untuk mengatur konsultasi lanjutan, fitting, atau pengukuran pasien.',
+    href: createWhatsappUrl('Halo Langkah Asa, saya ingin membuat jadwal pengukuran atau fitting.'),
+  },
+]
+
+const heroSlides: HeroSlide[] = [
+  {
+    title: 'Orthosis custom',
+    kicker: 'AFO, brace, dan support tubuh',
+    text: 'Dibuat mengikuti ukuran dan kebutuhan gerak pengguna.',
+    image: '/assets/hero-afo.jpg',
+  },
+  {
+    title: 'Prosthesis personal',
+    kicker: 'Kaki, tangan, dan jari palsu',
+    text: 'Fokus pada kenyamanan socket, alignment, dan mobilitas harian.',
+    image: '/assets/kaki-prostetik.jpg',
+  },
+  {
+    title: 'Spinal support',
+    kicker: 'TLSO, scoliosis brace, dan korset',
+    text: 'Stabilisasi tubuh dengan desain yang disesuaikan kondisi pasien.',
+    image: '/assets/tlso.jpg',
+  },
+]
 
 const navItems = [
   { label: 'Tentang', href: '/tentang' },
@@ -119,7 +216,7 @@ const products: Product[] = [
     description:
       'Static AFO membantu mempertahankan posisi ankle dan kaki pada kondisi kelemahan otot, instabilitas, atau kebutuhan immobilisasi ringan. Bentuknya dibuat mengikuti kontur kaki pengguna.',
     price: 'Satu sisi mulai Rp350.000',
-    image: '/assets/hero-afo.jpg',
+    image: '/assets/static-afo-support.svg',
     indications: ['Kelemahan ankle', 'Instabilitas ankle', 'Rehabilitasi ortopedi'],
     features: ['Desain rigid', 'Material ringan', 'Kontrol posisi kaki', 'Tali pengunci aman'],
     madeFor: ['Foot drop', 'Pasien pasca cedera tendon', 'Gangguan pola jalan'],
@@ -133,7 +230,7 @@ const products: Product[] = [
     description:
       'Collar digunakan untuk membantu membatasi gerak leher dan memberi support pada area cervical. Pemilihan tipe collar mengikuti arahan pemeriksaan dan tingkat stabilisasi yang dibutuhkan.',
     price: 'Konsultasi harga',
-    image: '/assets/pattern-1.png',
+    image: '/assets/collar-support.svg',
     indications: ['Nyeri leher', 'Cedera ringan cervical', 'Stabilisasi pasca terapi'],
     features: ['Pilihan support ringan sampai kuat', 'Ukuran menyesuaikan', 'Mudah dipakai', 'Edukasi pemakaian'],
     madeFor: ['Support harian', 'Pemulihan cedera', 'Kebutuhan pembatasan gerak leher'],
@@ -175,7 +272,7 @@ const products: Product[] = [
     description:
       'Hand splint dirancang untuk membantu posisi tangan dan pergelangan, baik untuk support harian maupun kebutuhan terapi tertentu. Bentuk dan area support dibuat berdasarkan kondisi pasien.',
     price: 'Konsultasi harga',
-    image: '/assets/tangan-prostetik.jpg',
+    image: '/assets/hand-splint-support.svg',
     indications: ['Kontraktur', 'Kelemahan tangan', 'Support pergelangan', 'Pasca cedera'],
     features: ['Custom posisi tangan', 'Strap adjustable', 'Material ringan', 'Dapat dibuat sesuai indikasi'],
     madeFor: ['Pasien stroke', 'Cedera tangan', 'Kebutuhan rehabilitasi tangan'],
@@ -400,6 +497,7 @@ function SiteLayout() {
 
       <a className="floating-whatsapp" href={contact.whatsapp} target="_blank" rel="noreferrer" aria-label="Chat WhatsApp">
         <PhoneCall size={22} />
+        <span>Chat WA</span>
       </a>
     </div>
   )
@@ -407,6 +505,10 @@ function SiteLayout() {
 
 function HomePageContent() {
   const featuredProducts = products.slice(0, 6)
+  usePageSeo(
+    'Langkah Asa Orthotic Prosthetic | Alat Ortotik dan Prostetik Custom',
+    'Langkah Asa melayani konsultasi dan pembuatan orthosis serta prosthesis custom seperti AFO, brace, kaki palsu, tangan palsu, jari palsu, dan alat bantu mobilitas.',
+  )
 
   return (
     <>
@@ -423,9 +525,24 @@ function HomePageContent() {
 }
 
 function HeroSection() {
+  const [activeSlide, setActiveSlide] = useState(0)
+  const slide = heroSlides[activeSlide]
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      setActiveSlide((index) => (index + 1) % heroSlides.length)
+    }, 5600)
+
+    return () => window.clearInterval(intervalId)
+  }, [])
+
   return (
     <section className="hero-section" aria-labelledby="hero-title">
-      <div className="hero-bg" />
+      <div className="hero-slides" aria-hidden="true">
+        {heroSlides.map((item, index) => (
+          <img className={index === activeSlide ? 'active' : ''} src={item.image} alt="" fetchPriority={index === 0 ? 'high' : 'auto'} key={item.title} />
+        ))}
+      </div>
       <div className="hero-content">
         <p className="eyebrow">Orthotic Prosthetic Care</p>
         <h1 id="hero-title">Langkah Asa</h1>
@@ -435,7 +552,7 @@ function HeroSection() {
         <div className="hero-actions">
           <a className="hero-cta" href={contact.whatsapp} target="_blank" rel="noreferrer">
             <PhoneCall size={19} />
-            Chat WhatsApp
+            Konsultasi via WhatsApp
           </a>
           <Link className="secondary-cta" to="/produk">
             Lihat semua produk
@@ -443,11 +560,22 @@ function HeroSection() {
           </Link>
         </div>
       </div>
-      <div className="hero-panel" aria-label="Ringkasan Langkah Asa">
-        <img src="/assets/logo-white.png" alt="" />
+      <div className="hero-panel" aria-live="polite" aria-label="Sorotan produk">
         <div>
-          <strong>Custom made support</strong>
-          <span>Orthosis, prosthesis, fitting, dan pendampingan pasien.</span>
+          <small>{slide.kicker}</small>
+          <strong>{slide.title}</strong>
+          <span>{slide.text}</span>
+        </div>
+        <div className="hero-dots" aria-label="Kontrol slider hero">
+          {heroSlides.map((item, index) => (
+            <button
+              className={index === activeSlide ? 'active' : ''}
+              type="button"
+              onClick={() => setActiveSlide(index)}
+              aria-label={`Tampilkan ${item.title}`}
+              key={item.title}
+            />
+          ))}
         </div>
       </div>
     </section>
@@ -537,6 +665,12 @@ function CoveragePreview() {
 }
 
 function AboutPage() {
+  usePageSeo(
+    'Tentang Langkah Asa | Filosofi Orthotic Prosthetic Care',
+    'Kenali filosofi Langkah Asa dalam merancang alat ortotik dan prostetik custom yang personal, nyaman, dan mendukung mobilitas pengguna.',
+    '/assets/logo-full.png',
+  )
+
   return (
     <>
       <PageHero
@@ -569,6 +703,12 @@ function AboutPage() {
 }
 
 function WhyPage() {
+  usePageSeo(
+    'Kenapa Memilih Langkah Asa | Orthosis dan Prosthesis Custom',
+    'Alasan memilih Langkah Asa: konsultasi empatik, alat custom, proses pengukuran rapi, fitting personal, dan pendampingan pasien.',
+    '/assets/hkafo.png',
+  )
+
   return (
     <>
       <PageHero
@@ -587,6 +727,11 @@ function WhyPage() {
 
 function ProductsPage() {
   const [activeCategory, setActiveCategory] = useState<'all' | ProductCategory>('all')
+  usePageSeo(
+    'Katalog Produk Langkah Asa | Orthosis dan Prosthesis',
+    'Lihat katalog produk Langkah Asa: AFO, HKAFO, korset, scoliosis brace, TLSO, sepatu ortopedi, kaki palsu, tangan palsu, jari palsu, dan socket prostetik.',
+    '/assets/hkafo.png',
+  )
   const visibleProducts = useMemo(
     () => (activeCategory === 'all' ? products : products.filter((product) => product.category === activeCategory)),
     [activeCategory],
@@ -627,6 +772,13 @@ function ProductsPage() {
 function ProductDetailPage() {
   const { slug } = useParams()
   const product = products.find((item) => item.slug === slug)
+  usePageSeo(
+    product ? `${product.name} | Langkah Asa Orthotic Prosthetic` : 'Produk Tidak Ditemukan | Langkah Asa',
+    product
+      ? `${product.description} Konsultasikan kebutuhan ${product.label} melalui WhatsApp Langkah Asa.`
+      : 'Produk Langkah Asa tidak ditemukan. Buka katalog orthosis dan prosthesis untuk memilih alat bantu yang sesuai.',
+    product?.image ?? '/assets/hero-afo.jpg',
+  )
 
   if (!product) {
     return <NotFoundPage />
@@ -649,7 +801,7 @@ function ProductDetailPage() {
           <h1>{product.name}</h1>
           <p>{product.description}</p>
           <div className="hero-actions">
-            <a className="hero-cta" href={contact.whatsapp} target="_blank" rel="noreferrer">
+            <a className="hero-cta" href={productWhatsappUrl(product)} target="_blank" rel="noreferrer">
               <PhoneCall size={19} />
               Konsultasi {product.label}
             </a>
@@ -689,6 +841,12 @@ function ProductDetailPage() {
 }
 
 function CoveragePage() {
+  usePageSeo(
+    'Area Jangkauan Langkah Asa | Solo, Magelang, Medan, Nasional',
+    'Langkah Asa melayani konsultasi alat ortotik dan prostetik untuk Solo Raya, Magelang, Medan, beberapa wilayah Indonesia, serta pengiriman nasional.',
+    '/assets/pattern-2.png',
+  )
+
   return (
     <>
       <PageHero
@@ -707,6 +865,12 @@ function CoveragePage() {
 }
 
 function ContactPage() {
+  usePageSeo(
+    'Kontak Langkah Asa | WhatsApp dan Instagram',
+    'Hubungi Langkah Asa melalui WhatsApp atau Instagram untuk konsultasi alat ortotik dan prostetik, estimasi harga, serta jadwal pengukuran.',
+    '/assets/logo-full.png',
+  )
+
   return (
     <>
       <PageHero
@@ -734,12 +898,34 @@ function ContactPage() {
           <p>Area lain bisa dibantu melalui konsultasi jarak jauh dan pengiriman.</p>
         </div>
       </section>
+      <section className="section whatsapp-section no-top-padding">
+        <SectionHeading
+          icon={<PhoneCall size={18} />}
+          kicker="Fitur WhatsApp"
+          title="Pilih kebutuhan agar chat awal langsung jelas."
+          text="Setiap tombol WhatsApp sudah membawa format pesan sesuai konteks, jadi calon pasien tidak perlu mulai dari kosong."
+        />
+        <div className="quick-wa-grid">
+          {whatsappShortcuts.map((item) => (
+            <a href={item.href} target="_blank" rel="noreferrer" className="quick-wa-card" key={item.title}>
+              <PhoneCall size={22} />
+              <strong>{item.title}</strong>
+              <span>{item.text}</span>
+            </a>
+          ))}
+        </div>
+      </section>
       <CtaSection />
     </>
   )
 }
 
 function NotFoundPage() {
+  usePageSeo(
+    'Halaman Tidak Ditemukan | Langkah Asa',
+    'Halaman yang dibuka tidak ditemukan. Kembali ke katalog produk Langkah Asa atau hubungi WhatsApp untuk konsultasi.',
+  )
+
   return (
     <>
       <PageHero
@@ -806,7 +992,7 @@ function ProductGrid({ products: items }: { products: Product[] }) {
       {items.map((product) => (
         <Link className="product-card" to={`/produk/${product.slug}`} key={product.slug}>
           <div className="product-image">
-            <img src={product.image} alt={product.name} />
+            <img src={product.image} alt={product.name} decoding="async" />
           </div>
           <div className="product-body">
             <div>

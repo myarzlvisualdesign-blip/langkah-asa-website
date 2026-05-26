@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" role="img" aria-labelledby="title desc">
+  <title id="title">Hand splint support visual</title>
+  <desc id="desc">Branded visual for hand splint orthosis product.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#eef8f6"/>
+      <stop offset="1" stop-color="#d7ece8"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#0a3852"/>
+      <stop offset="1" stop-color="#168c7d"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" fill="url(#bg)"/>
+  <path d="M108 730c188-116 356-137 504-63 163 81 325 77 486-14" fill="none" stroke="#ffffff" stroke-width="44" opacity=".72"/>
+  <g transform="translate(282 90)">
+    <path d="M267 197V73c0-41 31-73 70-73s70 32 70 73v193l17-149c5-41 40-70 80-65 39 5 67 41 62 82l-23 210 23-98c10-39 49-62 88-52 38 10 61 49 51 88l-52 202c-17 67-48 125-92 173-50 54-111 82-184 82H286c-63 0-117-20-162-61L28 591c-30-27-33-73-7-103s72-33 103-7l69 62V197c0-41 31-73 70-73 40 0 72 32 72 73z" fill="#ffffff" stroke="#0a3852" stroke-width="28" stroke-linejoin="round"/>
+    <path d="M194 421h280c66 0 119 54 119 120v79c-55 78-127 117-216 117H286c-54 0-104-15-150-45V479c0-32 26-58 58-58z" fill="#f4fbfa" stroke="url(#accent)" stroke-width="28"/>
+    <path d="M164 510h401M164 601h401" fill="none" stroke="#83e8d5" stroke-width="30" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(86 86)">
+    <rect width="220" height="62" rx="31" fill="#061e34"/>
+    <text x="110" y="40" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="700" fill="#ffffff">HAND SPLINT</text>
+  </g>
+</svg>
